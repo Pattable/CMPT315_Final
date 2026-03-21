@@ -1,6 +1,7 @@
 :root {
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
+  --color-accent: #10b981;
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-border: #e2e8f0;
@@ -17,6 +18,12 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --max-width: 3000px;
   --navbar-height: 64px;
+}
+
+html, body, #root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 *, *::before, *::after {
@@ -198,4 +205,159 @@ input, select {
   justify-content: center;
   gap: 5px;
   grid-column: span 3/5;
+}
+
+/* ---- Trip Card ---- */
+
+.trip-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.trip-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.trip-card-route {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.trip-card-cost {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.trip-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.trip-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-sm);
+}
+
+.trip-card-score {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- Results Page ---- */
+
+.results-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.results-route {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.results-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.results-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.breakdown-table td {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.95rem;
+}
+
+.breakdown-table td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+.breakdown-table tr:last-child td {
+  border-bottom: none;
+}
+
+.results-meta-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+.results-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.results-meta-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.results-meta-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.weather-bar {
+  height: 8px;
+  background-color: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.weather-bar-fill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 99px;
+}
+
+.results-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.results-total-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.results-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.results-disclaimer {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
