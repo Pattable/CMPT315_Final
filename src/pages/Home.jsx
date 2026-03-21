@@ -25,7 +25,7 @@ function Home() {
     currency: searchParams.get('currency') || initialFormData.currency
   })
 
-  const minEndDate = formData.startDate || new Date().toISOString().slice(0, 16)
+  const minEndDate = formData.startDate || new Date().toISOString().split('T')[0]
 
   const [errors, setErrors] = useState({})
 
@@ -133,7 +133,7 @@ function Home() {
 
             <label htmlFor="startDate">Start Date:</label>
             <input
-              type="datetime-local"
+              type="date"
               name="startDate"
               value={formData.startDate}
               onChange={handleChange}
@@ -143,7 +143,7 @@ function Home() {
 
             <label htmlFor="endDate">End Date:</label>
             <input
-              type="datetime-local"
+              type="date"
               name="endDate"
               value={formData.endDate}
               onChange={handleChange}

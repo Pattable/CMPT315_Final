@@ -361,3 +361,9 @@ input, select {
   font-size: 0.85rem;
   color: var(--color-text-muted);
 }
+
+.trip-list {
+  display: grid;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}

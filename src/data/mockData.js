@@ -1,16 +1,49 @@
 export const mockCities = [
-  { cityId: 1, name: 'Edmonton', country: 'Canada', currency: 'CAD', airportCode: 'YEG', active: true },
-  { cityId: 2, name: 'Paris', country: 'France', currency: 'EUR', airportCode: 'CDG', active: true },
-  { cityId: 3, name: 'Tokyo', country: 'Japan', currency: 'JPY', airportCode: 'NRT', active: true },
-  { cityId: 4, name: 'New York', country: 'USA', currency: 'USD', airportCode: 'JFK', active: true },
-  { cityId: 5, name: 'London', country: 'UK', currency: 'GBP', airportCode: 'LHR', active: true },
-  { cityId: 6, name: 'Calgary', country: 'Canada', currency: 'CAD', airportCode: 'YYC', active: true },
+  {
+    cityId: 1,
+    name: 'Edmonton',
+    country: 'Canada',
+    currency: 'CAD',
+    airportCode: 'YEG',
+    latitude: 53.5461,
+    longitude: -113.4938,
+    active: true,
+    foodPerPersonPerDay: 30,
+    transportPerPersonPerDay: 12,
+    lodging: { budget: 90, standard: 150, luxury: 280 }
+  },
+  {
+    cityId: 2,
+    name: 'Paris',
+    country: 'France',
+    currency: 'EUR',
+    airportCode: 'CDG',
+    latitude: 48.8566,
+    longitude: 2.3522,
+    active: true,
+    foodPerPersonPerDay: 45,
+    transportPerPersonPerDay: 15,
+    lodging: { budget: 110, standard: 190, luxury: 340 }
+  },
+  {
+    cityId: 3,
+    name: 'Tokyo',
+    country: 'Japan',
+    currency: 'JPY',
+    airportCode: 'NRT',
+    latitude: 35.6762,
+    longitude: 139.6503,
+    active: true,
+    foodPerPersonPerDay: 40,
+    transportPerPersonPerDay: 14,
+    lodging: { budget: 100, standard: 175, luxury: 320 }
+  },
 ]
 
 export const mockUsers = [
   { userId: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'client' },
-  { userId: 2, name: 'Bob Smith',     email: 'bob@example.com',   role: 'client' },
-  { userId: 3, name: 'Admin User',    email: 'admin@example.com', role: 'admin'  },
+  { userId: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'client' },
+  { userId: 3, name: 'Admin User', email: 'admin@example.com', role: 'admin' },
 ]
 
 export const mockTrips = [
