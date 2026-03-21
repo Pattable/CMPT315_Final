@@ -178,9 +178,7 @@ a:hover {
 /* ---- Search Form ---- */
 
 .search-form {
-  display: grid;
-  align-items: center;
-  grid-template-columns: 2fr 1fr;
+  text-align: center;
   gap: 5px;
 }
 
