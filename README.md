@@ -26,12 +26,12 @@ to receive a structured cost breakdown including flights, lodging, food, and tra
 
 ### 1. Clone the repository
 
-git clone <repo-url>
-cd <project-folder>
+git clone https://github.com/Pattable/CMPT315_Final.git
+cd CMPT315FinalProject
 
 ### 2. Navigate into the Vite project
 
-cd <vite-folder-name>
+cd CMPT315_Final
 
 ### 3. Install dependencies
 
