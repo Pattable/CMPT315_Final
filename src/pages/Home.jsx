@@ -101,27 +101,29 @@ function Home() {
       <div className="container">
         <h1>Home Page</h1>
         
-        <form className="search-form" onSubmit={handleSubmit}>
+        <form className="card search-form" onSubmit={handleSubmit}>
           <fieldset>
-            <legend>Search for your next trip</legend>
+            <legend>Plan your trip</legend>
 
-            <label htmlFor="currentLocation">Current Location:</label>
+            <label htmlFor="currentLocation">Origin City:</label>
             <input
               type="text"
               name="currentLocation"
+              placeholder='Edmonton'
               value={formData.currentLocation}
               onChange={handleChange}
             />
 
-            <label htmlFor="destination">Trip Destination:</label>
+            <label htmlFor="destination">Destination City:</label>
             <input
               type="text"
               name="destination" 
+              placeholder='Paris'
               value={formData.destination}
               onChange={handleChange}
             />
 
-            <label htmlFor="travellers">Number of Travellers:</label>
+            <label htmlFor="travellers">Travellers:</label>
             <input
               type="number"
               name="travellers"
@@ -131,7 +133,7 @@ function Home() {
             />
             {errors.travellers && <p className="error">{errors.travellers}</p>}
 
-            <label htmlFor="startDate">Start Date:</label>
+            <label htmlFor="startDate">Departure Date:</label>
             <input
               type="date"
               name="startDate"
@@ -141,7 +143,7 @@ function Home() {
             />
             {errors.startDate && <p className="error">{errors.startDate}</p>}
 
-            <label htmlFor="endDate">End Date:</label>
+            <label htmlFor="endDate">Return Date:</label>
             <input
               type="date"
               name="endDate"
@@ -151,7 +153,7 @@ function Home() {
             />
             {errors.endDate && <p className="error">{errors.endDate}</p>}
 
-            <label htmlFor="accommodation">Accommodation Type:</label>
+            <label htmlFor="accommodation">Accommodation:</label>
             <select
               name="accommodation"
               value={formData.accommodation}
@@ -163,7 +165,7 @@ function Home() {
               <option value="camping">Camping</option>
             </select>
 
-            <label htmlFor="currency">Currency:</label>
+            <label htmlFor="currency">Preferred Currency:</label>
             <select
               name="currency"
               value={formData.currency}
@@ -177,7 +179,7 @@ function Home() {
             </select>
 
             <div className="form-buttons">
-              <button type="submit">Search</button>
+              <button type="submit">Calculate</button>
               <button onClick={handleReset}>Reset</button>
             </div>
           </fieldset>

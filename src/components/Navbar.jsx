@@ -1,10 +1,9 @@
+import { useAuth } from '../pages/AuthContext'
 import { Link } from 'react-router-dom'
 
-const mockUser = null
-// const mockUser = { role: 'client' }
-// const mockUser = { role: 'admin' }
-
 function Navbar() {
+  const { user, logout } = useAuth()
+
   return (
     <nav className="navbar">
       <div className="navbar-inner container">
@@ -13,24 +12,24 @@ function Navbar() {
         </Link>
 
         <div className="navbar-links">
-          {!mockUser && (
+          {!user && (
             <>
               <Link to="/login">Login</Link>
               <Link to="/register" className="btn btn-primary">Register</Link>
             </>
           )}
-          {mockUser?.role === 'client' && (
+          {user?.role === 'client' && (
             <>
               <Link to="/">Home</Link>
               <Link to="/trips">My Trips</Link>
-              <button className="btn btn-outline">Logout</button>
+              <button onClick={logout} className="btn btn-outline">Logout</button>
             </>
           )}
-          {mockUser?.role === 'admin' && (
+          {user?.role === 'admin' && (
             <>
               <Link to="/admin">Dashboard</Link>
               <Link to="/admin/cities">Cities</Link>
-              <button className="btn btn-outline">Logout</button>
+              <button onClick={logout} className="btn btn-outline">Logout</button>
             </>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { AuthProvider } from './pages/AuthContext'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -14,20 +15,22 @@ import AdminCities from './pages/admin/AdminCities'
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/trips" element={<TripList />} />
-          <Route path="/trips/:tripId" element={<TripDetail />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/cities" element={<AdminCities />} />
-        </Routes>
-      </main>
-      <Footer />
+      <AuthProvider>
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/trips" element={<TripList />} />
+            <Route path="/trips/:tripId" element={<TripDetail />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/cities" element={<AdminCities />} />
+          </Routes>
+        </main>
+        <Footer />
+      </AuthProvider>
     </BrowserRouter>
   )
 }
