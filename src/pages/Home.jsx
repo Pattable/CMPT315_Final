@@ -109,6 +109,7 @@ function Home() {
             <input
               type="text"
               name="currentLocation"
+              placeholder='Edmonton'
               value={formData.currentLocation}
               onChange={handleChange}
             />
@@ -117,6 +118,7 @@ function Home() {
             <input
               type="text"
               name="destination" 
+              placeholder='Paris'
               value={formData.destination}
               onChange={handleChange}
             />
