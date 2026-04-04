@@ -1,16 +1,113 @@
-# React + Vite
+# Smart Trip Budget Estimator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based trip cost estimation application built with React and Vite.
+Plan your trip by entering your origin, destination, travel dates, and preferences
+to receive a structured cost breakdown including flights, lodging, food, and transport.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Team
 
-## React Compiler
+- Hamza Habib
+- Syed Hussein  
+- Patrick Huynh
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 18
+- Vite
+- React Router v6
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+git clone https://github.com/Pattable/CMPT315_Final.git
+
+cd CMPT315FinalProject
+
+### 2. Navigate into the Vite project
+
+cd CMPT315_Final
+
+### 3. Install dependencies
+
+npm install
+
+### 4. Start the development server
+
+npm run dev
+
+### 5. Open in browser
+
+Visit http://localhost:5173
+
+---
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home — trip search form |
+| `/results` | Estimated cost breakdown for a trip |
+| `/login` | User login |
+| `/register` | User registration |
+| `/trips` | Saved trips list (requires login) |
+| `/trips/:tripId` | Saved trip detail view |
+| `/admin` | Admin dashboard |
+| `/admin/cities` | Manage supported cities |
+
+---
+
+## Project Structure
+```
+src/
+  components/
+    Navbar.jsx        # Site navigation, handles guest/user/admin states
+    Footer.jsx        # Site footer
+    TripCard.jsx      # Reusable card component for saved trips
+  pages/
+    Home.jsx          # Trip search form
+    Results.jsx       # Cost estimate results
+    Login.jsx         # Login form
+    Register.jsx      # Registration form
+    trips/
+      TripList.jsx    # Saved trips list
+      TripDetail.jsx  # Individual trip detail
+    admin/
+      AdminDashboard.jsx  # Admin stats overview
+      AdminCities.jsx     # City management
+  data/
+    mockData.js       # Mock cities, trips, and users for frontend prototype
+  index.css           # Global styles and CSS variables
+  App.jsx             # Route definitions
+  main.jsx            # App entry point
+```
+
+---
+
+## Notes
+
+- This is currently a **frontend prototype**. There is no backend or database connected at this stage.
+- All trip data is sourced from `src/data/mockData.js` as placeholder data.
+- The **Save Trip** button on the Results page is a placeholder — saving functionality will be implemented once the backend is connected.
+- To simulate different navigation states, open `src/components/Navbar.jsx` and change the `mockUser` variable:
+```js
+const mockUser = null              // Guest (default)
+const mockUser = { role: 'client' } // Logged in user
+const mockUser = { role: 'admin' }  // Admin
+```
+
+---
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build locally |
