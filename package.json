@@ -10,6 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.1.1",
+    "mongoose": "^9.4.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1"
@@ -23,6 +30,20 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "nodemon": "^3.1.14",
     "vite": "^8.0.0"
-  }
+  },
+  "description": "A web-based trip cost estimation application built with React and Vite. Plan your trip by entering your origin, destination, travel dates, and preferences to receive a structured cost breakdown including flights, lodging, food, and transport.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pattable/CMPT315_Final.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pattable/CMPT315_Final/issues"
+  },
+  "homepage": "https://github.com/Pattable/CMPT315_Final#readme"
 }
