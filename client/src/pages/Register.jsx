@@ -1,66 +1,57 @@
 import { useAuth } from './AuthContext'
 import { useState } from 'react'
-import { mockUsers } from '../data/mockData'
 
 function Register() {
   const [errors, setErrors] = useState({})
-  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
 
   const { login } = useAuth()
-  
+
   const validate = () => {
     const newErrors = {}
-  
-    const email = formData.email
-    const password = formData.password
-  
-    if (!email) {
+    if (!formData.email || formData.email.trim().length === 0) {
       newErrors.email = 'Email is required'
-    } else if (email.trim().length === 0) {
-      newErrors.email = 'Email must not be empty'
     }
-  
-    if (!password) {
+    if (!formData.password || formData.password.trim().length === 0) {
       newErrors.password = 'Password is required'
-    } else if (password.trim().length === 0) {
-      newErrors.password = 'Password must not be empty'
     }
-  
     return newErrors
   }
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target
-      
-    setFormData((prev) => {
-      const updated = { ...prev, [name]: value }
-  
-      return updated
-    })
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     const validationErrors = validate()
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
 
-    const foundUser = mockUsers.find(
-      user => user.email === 'alice@example.com'
-    )
-    
-    if (foundUser) {
-      login(foundUser)
-    } else {
-      validationErrors.email = 'User not found'
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        credentials: 'include',          // sends the session cookie
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        login(data.user)                 // logs them in right after registering
+      } else {
+        setErrors({ email: data.error }) // shows "Email already in use" etc
+      }
+    } catch (err) {
+      setErrors({ email: 'Server error, please try again.' })
     }
   }
 
@@ -86,7 +77,7 @@ function Register() {
             <label htmlFor="password">Password:</label>
             <input
               type="password"
-              name="password" 
+              name="password"
               placeholder="password"
               value={formData.password}
               onChange={handleChange}
@@ -102,4 +93,5 @@ function Register() {
     </div>
   )
 }
+
 export default Register
