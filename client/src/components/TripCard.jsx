@@ -17,7 +17,7 @@ function TripCard({ trip }) {
           {trip.from} → {trip.to}
         </h3>
         <span className="trip-card-cost">
-          ${trip.totalEstimatedCost.toLocaleString()} {trip.currency.toUpperCase()}
+          ${trip.totalEstimatedCost.toLocaleString()} {trip.preferredCurrency?.toUpperCase()}
         </span>
       </div>
 
@@ -28,9 +28,20 @@ function TripCard({ trip }) {
       </div>
 
       <div className="trip-card-footer">
-        <span className="trip-card-score">
-          Comfort Score: {trip.weatherScore} / 100
-        </span>
+        <div className="trip-card-score">
+          <span>Comfort Score: {trip.weatherScore} / 100</span>
+          {trip.weatherBreakdown && (
+            <div className="weather-breakdown">
+              <small>
+                Temp: +{trip.weatherBreakdown.temperatureComfort} | 
+                Precip: +{trip.weatherBreakdown.precipitationComfort} | 
+                Humidity: +{trip.weatherBreakdown.humidityComfort} | 
+                Wind: +{trip.weatherBreakdown.windComfort} | 
+                Weather: +{trip.weatherBreakdown.weatherCodeQuality}
+              </small>
+            </div>
+          )}
+        </div>
         <Link to={`/trips/${trip.tripId}`} className="btn btn-outline">
           View Details
         </Link>
