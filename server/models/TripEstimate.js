@@ -56,7 +56,7 @@ const tripEstimateSchema = new Schema(
       type: Date,
       required: true,
     },
-    travelers: {
+    travellers: {
       type: Number,
       required: true,
       min: 1,

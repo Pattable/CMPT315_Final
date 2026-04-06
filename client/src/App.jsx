@@ -14,6 +14,7 @@ import AdminCities from './pages/admin/AdminCities'
 
 function App() {
   return (
+    <BrowserRouter>
       <AuthProvider>
         <Navbar />
         <main>
@@ -30,6 +31,7 @@ function App() {
         </main>
         <Footer />
       </AuthProvider>
+    </BrowserRouter>
   )
 }
 
