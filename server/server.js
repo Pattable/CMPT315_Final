@@ -128,147 +128,419 @@ function mapAccommodationType(value) {
   return mapping[normalized] || null
 }
 
-function getExchangeRate(fromCurrency, toCurrency) {
-  const ratesInUsd = {
-    USD: 1,
-    CAD: 0.74,
-    EUR: 1.08,
-    GBP: 1.25,
-    JPY: 0.007,
-  }
+async function getExchangeRate(fromCurrency, toCurrency) {
+  try {
+    const url = `https://v6.exchangerate-api.com/v6/` +
+    `${process.env.CURRENCY_API_KEY}` +
+    `/latest/${fromCurrency}`
 
-  const fromRate = ratesInUsd[fromCurrency] ?? 1
-  const toRate = ratesInUsd[toCurrency] ?? 1
-  return toRate / fromRate
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.result !== 'success') {
+      console.warn('Currency API error:', data['error-type']);
+      return 1; // Default to 1 if API call fails
+    }
+
+    const rate = data.conversion_rates[toCurrency]
+    
+    if (!rate) {
+      console.warn(`Exchange rate not found for ${toCurrency}, defaulting to 1.`);
+      return 1; // Default to 1 if target currency not found
+    }
+    return rate;
+  }
+  catch (error) {
+    console.error('Error fetching exchange rates:', error)
+    return 1
+  }
 }
 
-function getWeatherScore(latitude, longitude, month) {
-  const monthScore = 100 - Math.abs(month - 6) * 8
-  const latScore = 50 + (latitude / 180) * 50
-  const score = Math.round((monthScore + latScore) / 2)
-  return Math.min(100, Math.max(0, score))
+async function getWeatherScore(latitude, longitude, startDate, endDate) {
+  try {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+      console.warn('Invalid start or end date provided to getWeatherScore')
+      return {
+        score: 0,
+        breakdown: {
+          temperatureComfort: 0,
+          precipitationComfort: 0,
+          humidityComfort: 0,
+          windComfort: 0,
+          weatherCodeQuality: 0,
+        },
+      }
+    }
+
+    const formattedStart = start.toISOString().split('T')[0]
+    const formattedEnd = end.toISOString().split('T')[0]
+
+    const url = `https://api.open-meteo.com/v1/forecast?` +
+    `latitude=${latitude}&longitude=${longitude}` +
+    `&start_date=${formattedStart}&end_date=${formattedEnd}` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,windspeed_10m_max,relative_humidity_2m_mean&timezone=auto`
+
+    const response = await fetch(url)
+    const data = await response.json()
+    const daily = data.daily
+
+    if (!daily || !Array.isArray(daily.time) || daily.time.length === 0) {
+      console.warn('No daily forecast returned from weather API')
+      return {
+        score: 0,
+        breakdown: {
+          temperatureComfort: 0,
+          precipitationComfort: 0,
+          humidityComfort: 0,
+          windComfort: 0,
+          weatherCodeQuality: 0,
+        },
+      }
+    }
+
+    const days = daily.time.map((_, index) => {
+      const maxTemp = daily.temperature_2m_max?.[index]
+      const minTemp = daily.temperature_2m_min?.[index]
+      const precipitation = daily.precipitation_sum?.[index] ?? 0
+      const humidity = daily.relative_humidity_2m_mean?.[index] ?? 50
+      const windSpeed = daily.windspeed_10m_max?.[index] ?? 0
+      const weatherCode = daily.weathercode?.[index]
+      const meanTemp = maxTemp != null && minTemp != null ? (maxTemp + minTemp) / 2 : null
+      return { meanTemp, precipitation, humidity, windSpeed, weatherCode }
+    })
+
+    let totalScore = 0
+    let totalTempComfort = 0
+    let totalPrecipitationComfort = 0
+    let totalHumidityComfort = 0
+    let totalWindComfort = 0
+    let totalWeatherCodeQuality = 0
+    let validDays = 0
+
+    for (const day of days) {
+      let score = 0
+      let tempComfort = 0
+      let precipitationComfort = 0
+      let humidityComfort = 0
+      let windComfort = 0
+      let weatherCodeQuality = 0
+
+      if (day.meanTemp !== null && day.meanTemp !== undefined) {
+        const idealTemp = 22
+        const tempDiff = Math.abs(day.meanTemp - idealTemp)
+        if (tempDiff <= 5) {
+          tempComfort = 30
+        } else if (tempDiff <= 10) {
+          tempComfort = 24
+        } else if (tempDiff <= 15) {
+          tempComfort = 16
+        } else if (tempDiff <= 20) {
+          tempComfort = 8
+        }
+        score += tempComfort
+      }
+
+      if (day.precipitation !== null && day.precipitation !== undefined) {
+        if (day.precipitation < 5) {
+          precipitationComfort = 20
+        } else if (day.precipitation < 15) {
+          precipitationComfort = 15
+        } else if (day.precipitation < 30) {
+          precipitationComfort = 10
+        } else if (day.precipitation < 50) {
+          precipitationComfort = 5
+        }
+        score += precipitationComfort
+      }
+
+      if (day.humidity !== null && day.humidity !== undefined) {
+        if (day.humidity >= 40 && day.humidity <= 60) {
+          humidityComfort = 15
+        } else if (day.humidity >= 30 && day.humidity <= 70) {
+          humidityComfort = 10
+        }
+        score += humidityComfort
+      }
+
+      if (day.windSpeed !== null && day.windSpeed !== undefined) {
+        if (day.windSpeed < 8) {
+          windComfort = 15
+        } else if (day.windSpeed < 12) {
+          windComfort = 10
+        } else if (day.windSpeed < 18) {
+          windComfort = 5
+        }
+        score += windComfort
+      }
+
+      if (day.weatherCode !== null && day.weatherCode !== undefined) {
+        if (day.weatherCode === 0 || day.weatherCode === 1) {
+          weatherCodeQuality = 20
+        } else if (day.weatherCode === 2 || day.weatherCode === 3) {
+          weatherCodeQuality = 15
+        } else if ((day.weatherCode >= 45 && day.weatherCode <= 48) ||
+                   (day.weatherCode >= 51 && day.weatherCode <= 67) ||
+                   (day.weatherCode >= 80 && day.weatherCode <= 82)) {
+          weatherCodeQuality = 5
+        }
+        score += weatherCodeQuality
+      }
+
+      totalScore += Math.min(100, Math.max(0, score))
+      totalTempComfort += tempComfort
+      totalPrecipitationComfort += precipitationComfort
+      totalHumidityComfort += humidityComfort
+      totalWindComfort += windComfort
+      totalWeatherCodeQuality += weatherCodeQuality
+      validDays += 1
+    }
+
+    if (validDays === 0) {
+      return {
+        score: 0,
+        breakdown: {
+          temperatureComfort: 0,
+          precipitationComfort: 0,
+          humidityComfort: 0,
+          windComfort: 0,
+          weatherCodeQuality: 0,
+        },
+      }
+    }
+
+    const avgTempComfort = Math.round(totalTempComfort / validDays)
+    const avgPrecipitationComfort = Math.round(totalPrecipitationComfort / validDays)
+    const avgHumidityComfort = Math.round(totalHumidityComfort / validDays)
+    const avgWindComfort = Math.round(totalWindComfort / validDays)
+    const avgWeatherCodeQuality = Math.round(totalWeatherCodeQuality / validDays)
+    const finalScore = Math.min(100, Math.max(0, Math.round(totalScore / validDays)))
+
+    return {
+      score: finalScore,
+      breakdown: {
+        temperatureComfort: avgTempComfort,
+        precipitationComfort: avgPrecipitationComfort,
+        humidityComfort: avgHumidityComfort,
+        windComfort: avgWindComfort,
+        weatherCodeQuality: avgWeatherCodeQuality,
+      },
+    }
+  } catch (error) {
+    console.error('Error calculating weather score:', error)
+    return {
+      score: 0,
+      breakdown: {
+        temperatureComfort: 0,
+        precipitationComfort: 0,
+        humidityComfort: 0,
+        windComfort: 0,
+        weatherCodeQuality: 0,
+      },
+    }
+  }
+}
+
+async function buildEstimatePayload(body) {
+  const {
+    currentLocation,
+    destination,
+    travellers,
+    startDate,
+    endDate,
+    accommodation,
+    currency,
+  } = body
+
+  if (
+    !currentLocation ||
+    !destination ||
+    !travellers ||
+    !startDate ||
+    !endDate ||
+    !accommodation ||
+    !currency
+  ) {
+    const error = new Error('Missing required trip search fields.')
+    error.status = 400
+    throw error
+  }
+
+  const travellerCount = Number(travellers)
+  if (!Number.isInteger(travellerCount) || travellerCount < 1) {
+    const error = new Error('Travellers must be a number of at least 1.')
+    error.status = 400
+    throw error
+  }
+
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    const error = new Error('Invalid start or end date.')
+    error.status = 400
+    throw error
+  }
+
+  if (end < start) {
+    const error = new Error('End date must be the same day or after the start date.')
+    error.status = 400
+    throw error
+  }
+
+  const originCity = await City.findOne({
+    name: new RegExp(`^${escapeRegex(currentLocation.trim())}$`, 'i'),
+    status: 'active',
+  })
+  const destinationCity = await City.findOne({
+    name: new RegExp(`^${escapeRegex(destination.trim())}$`, 'i'),
+    status: 'active',
+  })
+
+  if (!originCity) {
+    const error = new Error('Origin city not found.')
+    error.status = 404
+    throw error
+  } else if (!destinationCity) {
+    const error = new Error('Destination city not found.')
+    error.status = 404
+    throw error
+  }
+
+  const accommodationType = mapAccommodationType(accommodation)
+  if (!accommodationType) {
+    const error = new Error('Unsupported accommodation type.')
+    error.status = 400
+    throw error
+  }
+
+  const lodgingOption = await LodgingOption.findOne({
+    cityId: destinationCity._id,
+    accommodationType,
+  })
+
+  if (!lodgingOption) {
+    const error = new Error(`No lodging option found for ${destinationCity.name}.`)
+    error.status = 404
+    throw error
+  }
+
+  const msPerDay = 1000 * 60 * 60 * 24
+  const rawDays = Math.ceil((end - start) / msPerDay)
+  const tripDays = Math.max(1, rawDays)
+  const nights = tripDays
+
+  const flight = Math.round(300 * travellerCount + 120 * tripDays)
+  const roomsRequired = Math.max(1, Math.ceil(travellerCount / destinationCity.defaultPeoplePerRoom))
+  const lodging = nights * roomsRequired * lodgingOption.pricePerNight
+  const food = travellerCount * tripDays * destinationCity.foodPerPersonPerDay
+  const transport = travellerCount * tripDays * destinationCity.transportPerPersonPerDay
+
+  const destinationCurrency = destinationCity.currency.toUpperCase()
+  const preferredCurrency = currency.toUpperCase()
+  const exchangeRateUsed = await getExchangeRate(preferredCurrency, destinationCurrency)
+
+  const convert = (value) => Math.round(value * exchangeRateUsed * 100) / 100
+
+  const breakdown = {
+    flightCost: flight,
+    lodgingCost: lodging,
+    foodCost: food,
+    transportCost: transport,
+    roomsRequired,
+  }
+
+  const localBreakdown = {
+    flightCost: convert(flight),
+    lodgingCost: convert(lodging),
+    foodCost: convert(food),
+    transportCost: convert(transport),
+    roomsRequired,
+  }
+
+  const totalEstimatedCost =
+    breakdown.flightCost +
+    breakdown.lodgingCost +
+    breakdown.foodCost +
+    breakdown.transportCost
+
+  const totalLocalEstimatedCost =
+    localBreakdown.flightCost +
+    localBreakdown.lodgingCost +
+    localBreakdown.foodCost +
+    localBreakdown.transportCost
+
+  const weatherResult = await getWeatherScore(
+    destinationCity.location.latitude,
+    destinationCity.location.longitude,
+    start.toISOString().split('T')[0],
+    end.toISOString().split('T')[0]
+  )
+
+  const estimatePayload = {
+    originCityId: originCity._id,
+    destinationCityId: destinationCity._id,
+    startDate: start,
+    endDate: end,
+    travellers: travellerCount,
+    accommodationType,
+    preferredCurrency,
+    exchangeRateUsed,
+    weatherScore: weatherResult.score,
+    weatherBreakdown: weatherResult.breakdown,
+    totalEstimatedCost,
+    isPartialResult: false,
+    breakdown,
+    localBreakdown,
+    totalLocalEstimatedCost,
+  }
+
+  return { estimatePayload, originCity, destinationCity, destinationCurrency }
 }
 
 app.post('/api/estimates', async (req, res) => {
   try {
-    const {
-      currentLocation,
-      destination,
-      travellers,
-      startDate,
-      endDate,
-      accommodation,
-      currency,
-    } = req.body
+    const { estimatePayload, originCity, destinationCity, destinationCurrency } = await buildEstimatePayload(req.body)
 
-    if (
-      !currentLocation ||
-      !destination ||
-      !travellers ||
-      !startDate ||
-      !endDate ||
-      !accommodation ||
-      !currency
-    ) {
-      return res.status(400).json({ error: 'Missing required trip search fields.' })
-    }
-
-    const travelerCount = Number(travellers)
-    if (!Number.isInteger(travelerCount) || travelerCount < 1) {
-      return res.status(400).json({ error: 'Travellers must be a number of at least 1.' })
-    }
-
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      return res.status(400).json({ error: 'Invalid start or end date.' })
-    }
-
-    if (end < start) {
-      return res.status(400).json({ error: 'End date must be the same day or after the start date.' })
-    }
-
-    const originCity = await City.findOne({
-      name: new RegExp(`^${escapeRegex(currentLocation.trim())}$`, 'i'),
-      status: 'active',
-    })
-    const destinationCity = await City.findOne({
-      name: new RegExp(`^${escapeRegex(destination.trim())}$`, 'i'),
-      status: 'active',
-    })
-
-    if (!originCity || !destinationCity) {
-      return res.status(404).json({ error: 'Origin or destination city not found.' })
-    }
-
-    const accommodationType = mapAccommodationType(accommodation)
-    if (!accommodationType) {
-      return res.status(400).json({ error: 'Unsupported accommodation type.' })
-    }
-
-    const lodgingOption = await LodgingOption.findOne({
-      cityId: destinationCity._id,
-      accommodationType,
-    })
-
-    if (!lodgingOption) {
-      return res.status(404).json({ error: `No lodging option found for ${destinationCity.name}.` })
-    }
-
-    const msPerDay = 1000 * 60 * 60 * 24
-    const rawDays = Math.ceil((end - start) / msPerDay)
-    const tripDays = Math.max(1, rawDays)
-    const nights = tripDays
-    const roomsRequired = Math.max(
-      1,
-      Math.ceil(travelerCount / destinationCity.defaultPeoplePerRoom)
-    )
-
-    const lodgingCost = nights * roomsRequired * lodgingOption.pricePerNight
-    const foodCost = travelerCount * tripDays * destinationCity.foodPerPersonPerDay
-    const transportCost =
-      travelerCount * tripDays * destinationCity.transportPerPersonPerDay
-    const flightCost = Math.round(300 * travelerCount + 120 * tripDays)
-
-    const destinationCurrency = destinationCity.currency.toUpperCase()
-    const preferredCurrency = String(currency || '').toUpperCase()
-    const exchangeRateUsed = getExchangeRate(destinationCurrency, preferredCurrency)
-
-    const convert = (value) => Math.round(value * exchangeRateUsed * 100) / 100
-
-    const breakdown = {
-      flight: convert(flightCost),
-      lodging: convert(lodgingCost),
-      food: convert(foodCost),
-      transport: convert(transportCost),
-      roomsRequired,
-    }
-
-    const totalEstimatedCost =
-      breakdown.flight + breakdown.lodging + breakdown.food + breakdown.transport
-
-    const weatherScore = getWeatherScore(
-      destinationCity.location.latitude,
-      destinationCity.location.longitude,
-      start.getMonth() + 1
-    )
+    const { originCityId, destinationCityId, isPartialResult, ...publicPayload } = estimatePayload
 
     return res.json({
+      tripId: null,
+      saved: false,
+      ...publicPayload,
       from: originCity.name,
       to: destinationCity.name,
-      travellers: travelerCount,
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      accommodation: accommodationType,
-      currency: preferredCurrency,
-      breakdown,
-      exchangeRateUsed,
-      weatherScore,
-      totalEstimatedCost,
+      destCurrency: destinationCurrency,
     })
   } catch (error) {
     console.error('Estimate error:', error)
-    return res.status(500).json({ error: 'Unable to calculate estimate.' })
+    return res.status(error.status || 500).json({ error: error.message || 'Unable to calculate estimate.' })
+  }
+})
+
+app.post('/api/estimates/save', requireAuth, async (req, res) => {
+  try {
+    const { estimatePayload, originCity, destinationCity, destinationCurrency } = await buildEstimatePayload(req.body)
+
+    const savedEstimate = await TripEstimate.create({
+      userId: req.session.user.id,
+      ...estimatePayload,
+    })
+
+    const { originCityId, destinationCityId, isPartialResult, ...publicPayload } = estimatePayload
+
+    return res.json({
+      message: 'Trip saved successfully.',
+      tripId: savedEstimate._id,
+      saved: true,
+      ...publicPayload,
+      from: originCity.name,
+      to: destinationCity.name,
+      destCurrency: destinationCurrency,
+    })
+  } catch (error) {
+    console.error('Save estimate error:', error)
+    return res.status(error.status || 500).json({ error: error.message || 'Unable to save trip estimate.' })
   }
 })
 
