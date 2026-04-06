@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { mockTrips } from '../data/mockData'
 import TripCard from '../components/TripCard'
+import { apiFetch } from '../api'
 
 function Results() {
   const navigate = useNavigate()
@@ -14,16 +15,42 @@ function Results() {
   //const accommodation = searchParams.get('accommodation')
   //const currency      = searchParams.get('currency')
 
-  const trip = mockTrips[0] // for now just hardcoded a trip from the mockdata since API are not added yet
+  useEffect(() => {
+    const fetchEstimate = async () => {
+      if (!from || !to || !startDate || !endDate || !accommodation || !currency) {
+        setError('Missing search parameters. Please return to the home page and try again.')
+        setLoading(false)
+        return
+      }
 
-  const { breakdown } = trip
-  const from          = trip.from
-  const to            = trip.to
-  const travellers    = trip.travellers
-  const startDate     = trip.startDate
-  const endDate       = trip.endDate
-  const accommodation = trip.accommodation
-  const currency      = trip.currency
+      setLoading(true)
+      setError(null)
+
+      try {
+        const data = await apiFetch('/api/estimates', {
+          method: 'POST',
+          body: JSON.stringify({
+            currentLocation: from,
+            destination: to,
+            travellers,
+            startDate,
+            endDate,
+            accommodation,
+            currency,
+          }),
+        })
+
+        setTrip(data)
+      } catch (fetchError) {
+        setError('Unable to contact the server. Please try again later.')
+        setTrip(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEstimate()
+  }, [from, to, startDate, endDate, accommodation, currency, travellers])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -55,19 +82,19 @@ function Results() {
             <tbody>
               <tr>
                 <td>Flight Estimate</td>
-                <td>${breakdown.flight.toLocaleString()}</td>
+                <td>${breakdown.flightCost.toLocaleString()}</td>
               </tr>
               <tr>
                 <td>Lodging Estimate</td>
-                <td>${breakdown.lodging.toLocaleString()}</td>
+                <td>${breakdown.lodgingCost.toLocaleString()}</td>
               </tr>
               <tr>
                 <td>Food Estimate</td>
-                <td>${breakdown.food.toLocaleString()}</td>
+                <td>${breakdown.foodCost.toLocaleString()}</td>
               </tr>
               <tr>
                 <td>Local Transport Estimate</td>
-                <td>${breakdown.transport.toLocaleString()}</td>
+                <td>${breakdown.transportCost.toLocaleString()}</td>
               </tr>
             </tbody>
           </table>
@@ -100,12 +127,21 @@ function Results() {
         </div>
 
         <div className="results-actions">
-          <button className="btn btn-primary">Save Trip</button>
           <button
-            className="btn btn-outline"
-            onClick={() => navigate(`/?${searchParams.toString()}`)}
+            className="btn btn-primary"
+            onClick={async () => {
+              try {
+                await apiFetch('/api/trips', {
+                  method: 'POST',
+                  body: JSON.stringify(trip),
+                })
+                navigate('/trips')
+              } catch (err) {
+                alert(err.message)
+              }
+            }}
           >
-            Modify Search
+            Save Trip
           </button>
         </div>
 
@@ -113,7 +149,7 @@ function Results() {
         <p className="results-disclaimer">
           Estimates are based on stored cost profiles and API data.
         </p>
-        <TripCard trip={trip}/>
+        <TripCard trip={trip} />
 
       </div>
     </div>
