@@ -56,7 +56,7 @@ const tripEstimateSchema = new Schema(
       type: Date,
       required: true,
     },
-    travelers: {
+    travellers: {
       type: Number,
       required: true,
       min: 1,
@@ -100,11 +100,9 @@ const tripEstimateSchema = new Schema(
 )
 
 // business rule: endDate must be after startDate
-tripEstimateSchema.pre('validate', function (next) {
+tripEstimateSchema.pre('validate', function () {
   if (this.endDate <= this.startDate) {
-    next(new Error('endDate must be after startDate'))
-  } else {
-    next()
+    throw new Error('endDate must be after startDate')
   }
 })
 

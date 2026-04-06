@@ -39,6 +39,9 @@ function TripDetail() {
           <p><strong>Transport:</strong> ${trip.breakdown.transport}</p>
           <p><strong>Exchange Rate Used:</strong> {trip.exchangeRateUsed}</p>
           <p><strong>Weather Score:</strong> {trip.weatherScore}</p>
+          {trip.weatherBreakdown && (
+            <p><strong>Weather Breakdown:</strong> Temp: +{trip.weatherBreakdown.temperatureComfort}, Precip: +{trip.weatherBreakdown.precipitationComfort}, Humidity: +{trip.weatherBreakdown.humidityComfort}, Wind: +{trip.weatherBreakdown.windComfort}, Weather: +{trip.weatherBreakdown.weatherCodeQuality}</p>
+          )}
           <p><strong>Total:</strong> ${trip.totalEstimatedCost}</p>
         </div>
       </div>
