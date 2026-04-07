@@ -28,7 +28,7 @@ function TripList() {
         ) : (
           <div className="trip-list">
             {trips.map((trip) => (
-              <TripCard key={trip._id} trip={trip} />
+              <TripCard key={trip.tripId || trip._id} trip={trip} />
             ))}
           </div>
         )}

@@ -1,7 +1,38 @@
 import { Link } from 'react-router-dom'
-import { mockAdminStats, mockTrips } from '../../data/mockData'
+import { useEffect, useState } from 'react'
+import { apiFetch } from '../../api'
 
 function AdminDashboard() {
+  const [stats, setStats] = useState({
+    totalTrips: 0,
+    activeCities: 0,
+  })
+
+  const [recentTrips, setRecentTrips] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsData = await apiFetch('/api/admin/stats')
+        setStats(statsData)
+
+        const tripsData = await apiFetch('/api/trips')
+
+        // take latest 5 trips
+        setRecentTrips(tripsData.slice(0, 5))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) return <p>Loading...</p>
+
   return (
     <div className="page-wrapper">
       <div className="container">
@@ -10,22 +41,23 @@ function AdminDashboard() {
         <div className="stats-grid">
           <div className="card">
             <h3>Total Saved Trips</h3>
-            <p>{mockAdminStats.totalSavedTrips}</p>
+            <p>{stats.totalTrips}</p>
           </div>
 
           <div className="card">
             <h3>Active Cities</h3>
-            <p>{mockAdminStats.activeCities}</p>
+            <p>{stats.activeCities}</p>
           </div>
 
           <div className="card">
             <h3>Most Searched Destination</h3>
-            <p>{mockAdminStats.mostSearchedDestination}</p>
+            <p>Coming soon</p>
           </div>
         </div>
 
         <div className="card detail-section">
           <h2>Recent Trips</h2>
+
           <table className="admin-table">
             <thead>
               <tr>
@@ -36,11 +68,11 @@ function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {mockTrips.map((trip) => (
-                <tr key={trip.tripId}>
-                  <td>{trip.tripId}</td>
-                  <td>{trip.from}</td>
-                  <td>{trip.to}</td>
+              {recentTrips.map((trip) => (
+                <tr key={trip._id}>
+                  <td>{trip._id}</td>
+                  <td>{trip.originCityId}</td>
+                  <td>{trip.destinationCityId}</td>
                   <td>${trip.totalEstimatedCost}</td>
                 </tr>
               ))}
