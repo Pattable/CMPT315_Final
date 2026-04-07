@@ -219,24 +219,18 @@ function Results() {
           </div>
           <div className="card results-meta-card">
             <p className="results-meta-label">Weather Comfort Score</p>
-            <p className="results-meta-value">{trip.weatherScore} / 100</p>
-            <div className="weather-bar">
-              <div
-                className="weather-bar-fill"
-                style={{ width: `${trip.weatherScore}%` }}
-              />
-            </div>
-            {trip.weatherBreakdown && (
-              <div className="weather-breakdown-details">
-                <p className="results-meta-label">Score Breakdown:</p>
-                <ul className="results-meta-label">
-                  Temperature Comfort: +{trip.weatherBreakdown.temperatureComfort}<br/>
-                  Precipitation Levels: +{trip.weatherBreakdown.precipitationComfort}<br/>
-                  Humidity Comfort: +{trip.weatherBreakdown.humidityComfort}<br/>
-                  Wind Comfort: +{trip.weatherBreakdown.windComfort}<br/>
-                  Weather Conditions: +{trip.weatherBreakdown.weatherCodeQuality}
-                </ul>
-              </div>
+            {trip.weatherScore == null ? (
+              <p className="weather-unavailable">Unavailable — weather data could not be retrieved for these dates.</p>
+            ) : (
+              <>
+                <p className="results-meta-value">{trip.weatherScore} / 100</p>
+                <div className="weather-bar">
+                  <div
+                    className="weather-bar-fill"
+                    style={{ width: `${trip.weatherScore}%` }}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -252,13 +246,15 @@ function Results() {
         </div>
 
         <div className="results-actions">
-          <button
-            className="btn btn-primary"
-            onClick={saveTrip}
-            disabled={isSaving}
-          >
-            {trip?.tripId ? 'Saved' : isSaving ? 'Saving...' : 'Save Trip'}
-          </button>
+          {user?.role !== 'admin' && (
+            <button
+              className="btn btn-primary"
+              onClick={saveTrip}
+              disabled={isSaving}
+            >
+              {trip?.tripId ? 'Saved' : isSaving ? 'Saving...' : 'Save Trip'}
+            </button>
+          )}
           <button
             className="btn btn-outline"
             onClick={() => navigate(`/?${searchParams.toString()}`)}
@@ -276,9 +272,6 @@ function Results() {
         <p className="results-disclaimer">
           Estimates are based on stored cost profiles and API data.
         </p>
-
-        <TripCard trip={trip}/>
-
       </div>
     </div>
   )

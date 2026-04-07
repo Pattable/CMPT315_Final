@@ -8,6 +8,7 @@ function TripDetail() {
   const [trip, setTrip] = useState(null)
 
   const handleDelete = async () => {
+    if (!window.confirm('Delete this trip?')) return
     try {
       const res = await fetch(`/api/trips/${tripId}`, {
         method: 'DELETE',
@@ -16,7 +17,6 @@ function TripDetail() {
 
       if (!res.ok) throw new Error()
 
-      alert('Trip deleted')
       navigate('/trips')
     } catch (err) {
       console.error(err)
@@ -39,48 +39,60 @@ function TripDetail() {
     fetchTrip()
   }, [tripId])
 
-  if (!trip) return <p>Loading...</p>
+  if (!trip) return <p className="loading-msg">Loading...</p>
+
+  const formatDate = (d) =>
+    d ? new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'
+
+  const originName = trip.originCityId?.name || 'Unknown'
+  const destName = trip.destinationCityId?.name || 'Unknown'
 
   return (
     <div className="page-wrapper">
       <div className="container">
-        <Link to="/trips" className="btn btn-outline">Back</Link>
+        <div className="detail-nav">
+          <Link to="/trips" className="btn btn-outline">← Back to Trips</Link>
+          <button onClick={handleDelete} className="btn btn-danger">Delete Trip</button>
+        </div>
 
-        <h1>Trip Detail</h1>
+        <h1 className="detail-title">{originName} → {destName}</h1>
 
-        <button onClick={handleDelete} className="btn btn-danger">
-          Delete Trip
-        </button>
+        <div className="detail-grid">
+          <div className="card detail-section">
+            <h2>Trip Info</h2>
+            <div className="detail-rows">
+              <div className="detail-row"><span>Origin</span><strong>{originName}</strong></div>
+              <div className="detail-row"><span>Destination</span><strong>{destName}</strong></div>
+              <div className="detail-row"><span>Departure</span><strong>{formatDate(trip.startDate)}</strong></div>
+              <div className="detail-row"><span>Return</span><strong>{formatDate(trip.endDate)}</strong></div>
+              <div className="detail-row"><span>Travellers</span><strong>{trip.travellers}</strong></div>
+              <div className="detail-row"><span>Accommodation</span><strong>{trip.accommodationType}</strong></div>
+              <div className="detail-row"><span>Currency</span><strong>{trip.preferredCurrency}</strong></div>
+            </div>
+          </div>
 
-        <div className="card detail-section">
-          <h2>Stored Breakdown Snapshot</h2>
+          <div className="card detail-section">
+            <h2>Cost Breakdown</h2>
+            <div className="detail-rows">
+              <div className="detail-row"><span>Flight</span><strong>${trip.breakdown?.flightCost?.toLocaleString() ?? 'N/A'}</strong></div>
+              <div className="detail-row"><span>Lodging</span><strong>${trip.breakdown?.lodgingCost?.toLocaleString() ?? 'N/A'}</strong></div>
+              <div className="detail-row"><span>Food</span><strong>${trip.breakdown?.foodCost?.toLocaleString() ?? 'N/A'}</strong></div>
+              <div className="detail-row"><span>Transport</span><strong>${trip.breakdown?.transportCost?.toLocaleString() ?? 'N/A'}</strong></div>
+              <div className="detail-row detail-total"><span>Total</span><strong>${trip.totalEstimatedCost?.toLocaleString() ?? 'N/A'} {trip.preferredCurrency}</strong></div>
+            </div>
+            <p className="detail-note">Exchange rate used: {trip.exchangeRateUsed}</p>
+          </div>
 
-          <p><strong>Origin City ID:</strong> {trip.originCityId}</p>
-          <p><strong>Destination City ID:</strong> {trip.destinationCityId}</p>
-
-          <p>
-            <strong>Total (Local):</strong> {trip.preferredCurrency} {trip.totalLocalEstimatedCost}
-          </p>
-
-          <p><strong>Lodging:</strong> ${trip.breakdown.lodgingCost}</p>
-          <p><strong>Food:</strong> ${trip.breakdown.foodCost}</p>
-          <p><strong>Transport:</strong> ${trip.breakdown.transportCost}</p>
-
-          <p><strong>Exchange Rate Used:</strong> {trip.exchangeRateUsed}</p>
-          <p><strong>Weather Score:</strong> {trip.weatherScore}</p>
-
-          {trip.weatherBreakdown && (
-            <p>
-              <strong>Weather Breakdown:</strong>
-              Temp: +{trip.weatherBreakdown.temperatureComfort},
-              Precip: +{trip.weatherBreakdown.precipitationComfort},
-              Humidity: +{trip.weatherBreakdown.humidityComfort},
-              Wind: +{trip.weatherBreakdown.windComfort},
-              Weather: +{trip.weatherBreakdown.weatherCodeQuality}
-            </p>
-          )}
-
-          <p><strong>Total (Base):</strong> ${trip.totalEstimatedCost}</p>
+          <div className="card detail-section">
+            <h2>Weather Comfort</h2>
+            {trip.weatherScore == null ? (
+              <p className="weather-unavailable">Score unavailable — weather data could not be retrieved for these dates.</p>
+            ) : (
+              <div className="detail-rows">
+                <div className="detail-row"><span>Overall Score</span><strong>{trip.weatherScore} / 100</strong></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
