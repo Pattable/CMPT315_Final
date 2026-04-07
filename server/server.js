@@ -131,8 +131,8 @@ function mapAccommodationType(value) {
 async function getExchangeRate(fromCurrency, toCurrency) {
   try {
     const url = `https://v6.exchangerate-api.com/v6/` +
-    `${process.env.CURRENCY_API_KEY}` +
-    `/latest/${fromCurrency}`
+      `${process.env.CURRENCY_API_KEY}` +
+      `/latest/${fromCurrency}`
 
     const response = await fetch(url);
     const data = await response.json();
@@ -143,7 +143,7 @@ async function getExchangeRate(fromCurrency, toCurrency) {
     }
 
     const rate = data.conversion_rates[toCurrency]
-    
+
     if (!rate) {
       console.warn(`Exchange rate not found for ${toCurrency}, defaulting to 1.`);
       return 1; // Default to 1 if target currency not found
@@ -178,9 +178,9 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
     const formattedEnd = end.toISOString().split('T')[0]
 
     const url = `https://api.open-meteo.com/v1/forecast?` +
-    `latitude=${latitude}&longitude=${longitude}` +
-    `&start_date=${formattedStart}&end_date=${formattedEnd}` +
-    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,windspeed_10m_max,relative_humidity_2m_mean&timezone=auto`
+      `latitude=${latitude}&longitude=${longitude}` +
+      `&start_date=${formattedStart}&end_date=${formattedEnd}` +
+      `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,windspeed_10m_max,relative_humidity_2m_mean&timezone=auto`
 
     const response = await fetch(url)
     const data = await response.json()
@@ -281,8 +281,8 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
         } else if (day.weatherCode === 2 || day.weatherCode === 3) {
           weatherCodeQuality = 15
         } else if ((day.weatherCode >= 45 && day.weatherCode <= 48) ||
-                   (day.weatherCode >= 51 && day.weatherCode <= 67) ||
-                   (day.weatherCode >= 80 && day.weatherCode <= 82)) {
+          (day.weatherCode >= 51 && day.weatherCode <= 67) ||
+          (day.weatherCode >= 80 && day.weatherCode <= 82)) {
           weatherCodeQuality = 5
         }
         score += weatherCodeQuality
@@ -543,5 +543,146 @@ app.post('/api/estimates/save', requireAuth, async (req, res) => {
     return res.status(error.status || 500).json({ error: error.message || 'Unable to save trip estimate.' })
   }
 })
+
+app.get('/api/trips', requireAuth, async (req, res) => {
+  try {
+    const trips = await TripEstimate.find({ userId: req.session.user.id })
+      .sort({ createdAt: -1 })
+
+    res.json(trips)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to fetch trips' })
+  }
+})
+
+app.get('/api/trips/:tripId', requireAuth, async (req, res) => {
+  try {
+    const trip = await TripEstimate.findOne({
+      _id: req.params.tripId,
+      userId: req.session.user.id
+    })
+
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' })
+    }
+
+    res.json(trip)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to fetch trip' })
+  }
+})
+
+app.delete('/api/trips/:tripId', requireAuth, async (req, res) => {
+  try {
+    const deleted = await TripEstimate.findOneAndDelete({
+      _id: req.params.tripId,
+      userId: req.session.user.id,
+    })
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Trip not found' })
+    }
+
+    res.json({ message: 'Trip deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete trip' })
+  }
+})
+
+app.post('/api/trips', requireAuth, async (req, res) => {
+  try {
+    const trip = await TripEstimate.create({
+      userId: req.session.user.id,
+      ...req.body,
+    })
+
+    res.status(201).json(trip)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to save trip' })
+  }
+})
+
+
+// ── Admin Routes ─────────────────────────────────────────────────────────
+
+// stats
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const totalTrips = await TripEstimate.countDocuments()
+    const activeCities = await City.countDocuments({ status: 'active' })
+
+    res.json({ totalTrips, activeCities })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch stats' })
+  }
+})
+
+
+// get all cities
+app.get('/api/admin/cities', requireAdmin, async (req, res) => {
+  try {
+    const cities = await City.find()
+    res.json(cities)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch cities' })
+  }
+})
+
+
+// add a city
+app.post('/api/admin/cities', requireAdmin, async (req, res) => {
+  try {
+    const newCity = await City.create(req.body)
+    res.status(201).json(newCity)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to create city' })
+  }
+})
+
+
+// edit a city
+app.put('/api/admin/cities/:cityId', requireAdmin, async (req, res) => {
+  try {
+    const { cityId } = req.params
+
+    const updated = await City.findByIdAndUpdate(
+      cityId,
+      req.body,
+      { new: true }
+    )
+
+    if (!updated) {
+      return res.status(404).json({ error: 'City not found' })
+    }
+
+    res.json(updated)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update city' })
+  }
+})
+
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const totalTrips = await TripEstimate.countDocuments()
+    const activeCities = await City.countDocuments({ status: 'active' })
+
+    res.json({
+      totalTrips,
+      activeCities,
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch stats' })
+  }
+})
+
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
