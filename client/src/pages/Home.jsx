@@ -1,9 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 function Home() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const [availableCities, setAvailableCities] = useState([])
+
+  useEffect(() => {
+    fetch('/api/cities')
+      .then((r) => r.json())
+      .then((data) => setAvailableCities(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [])
 
   const initialFormData = {
     currentLocation: '',
@@ -25,28 +33,33 @@ function Home() {
     currency: searchParams.get('currency') || initialFormData.currency
   })
 
-  const minEndDate = formData.startDate || new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
+  const minEndDate = formData.startDate || todayStr
 
   const [errors, setErrors] = useState({})
 
   const validate = () => {
     const newErrors = {}
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    if (!formData.currentLocation.trim()) {
+      newErrors.currentLocation = 'Origin city is required'
+    }
 
-    const start = formData.startDate ? new Date(formData.startDate) : null
-    const end = formData.endDate ? new Date(formData.endDate) : null
+    if (!formData.destination.trim()) {
+      newErrors.destination = 'Destination city is required'
+    } else if (formData.currentLocation.trim().toLowerCase() === formData.destination.trim().toLowerCase()) {
+      newErrors.destination = 'Destination must be different from origin'
+    }
 
-    if (!start) {
+    if (!formData.startDate) {
       newErrors.startDate = 'Start date is required'
-    } else if (start < today) {
+    } else if (formData.startDate < todayStr) {
       newErrors.startDate = 'Start date cannot be in the past'
     }
 
-    if (!end) {
+    if (!formData.endDate) {
       newErrors.endDate = 'End date is required'
-    } else if (start && end < start) {
+    } else if (formData.startDate && formData.endDate < formData.startDate) {
       newErrors.endDate = 'End date cannot be before start date'
     }
 
@@ -99,29 +112,52 @@ function Home() {
   return (
     <div className="page-wrapper">
       <div className="container">
-        <h1>Home Page</h1>
-        
+        <h1>Plan Your Trip</h1>
+
+        {availableCities.length > 0 && (
+          <details className="cities-dropdown">
+            <summary>Available cities ({availableCities.length})</summary>
+            <ul className="cities-dropdown-list">
+              {availableCities.map((c) => (
+                <li key={c._id}>{c.name} <span>{c.country}</span></li>
+              ))}
+            </ul>
+          </details>
+        )}
+
+        <datalist id="city-options">
+          {availableCities.map((c) => (
+            <option key={c._id} value={c.name} />
+          ))}
+        </datalist>
+
         <form className="card search-form" onSubmit={handleSubmit}>
           <fieldset>
-            <legend>Plan your trip</legend>
+            <legend>Trip Details</legend>
 
             <label htmlFor="currentLocation">Origin City:</label>
             <input
               type="text"
               name="currentLocation"
-              placeholder='Edmonton'
+              placeholder="e.g. Edmonton"
               value={formData.currentLocation}
               onChange={handleChange}
+              list="city-options"
+              autoComplete="off"
             />
+            {errors.currentLocation && <p className="error">{errors.currentLocation}</p>}
 
             <label htmlFor="destination">Destination City:</label>
             <input
               type="text"
-              name="destination" 
-              placeholder='Paris'
+              name="destination"
+              placeholder="e.g. Paris"
               value={formData.destination}
               onChange={handleChange}
+              list="city-options"
+              autoComplete="off"
             />
+            {errors.destination && <p className="error">{errors.destination}</p>}
 
             <label htmlFor="travellers">Travellers:</label>
             <input
@@ -139,7 +175,7 @@ function Home() {
               name="startDate"
               value={formData.startDate}
               onChange={handleChange}
-              min={new Date().toISOString().slice(0, 16)}
+              min={todayStr}
             />
             {errors.startDate && <p className="error">{errors.startDate}</p>}
 

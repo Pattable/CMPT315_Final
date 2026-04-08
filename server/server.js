@@ -18,7 +18,7 @@ app.set('trust proxy', 1)
 app.use(express.json())
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:5174',
     credentials: true
   })
 )
@@ -131,8 +131,8 @@ function mapAccommodationType(value) {
 async function getExchangeRate(fromCurrency, toCurrency) {
   try {
     const url = `https://v6.exchangerate-api.com/v6/` +
-    `${process.env.CURRENCY_API_KEY}` +
-    `/latest/${fromCurrency}`
+      `${process.env.CURRENCY_API_KEY}` +
+      `/latest/${fromCurrency}`
 
     const response = await fetch(url);
     const data = await response.json();
@@ -143,7 +143,7 @@ async function getExchangeRate(fromCurrency, toCurrency) {
     }
 
     const rate = data.conversion_rates[toCurrency]
-    
+
     if (!rate) {
       console.warn(`Exchange rate not found for ${toCurrency}, defaulting to 1.`);
       return 1; // Default to 1 if target currency not found
@@ -162,25 +162,16 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
     const end = new Date(endDate)
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
       console.warn('Invalid start or end date provided to getWeatherScore')
-      return {
-        score: 0,
-        breakdown: {
-          temperatureComfort: 0,
-          precipitationComfort: 0,
-          humidityComfort: 0,
-          windComfort: 0,
-          weatherCodeQuality: 0,
-        },
-      }
+      return { score: null, breakdown: null }
     }
 
     const formattedStart = start.toISOString().split('T')[0]
     const formattedEnd = end.toISOString().split('T')[0]
 
     const url = `https://api.open-meteo.com/v1/forecast?` +
-    `latitude=${latitude}&longitude=${longitude}` +
-    `&start_date=${formattedStart}&end_date=${formattedEnd}` +
-    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,windspeed_10m_max,relative_humidity_2m_mean&timezone=auto`
+      `latitude=${latitude}&longitude=${longitude}` +
+      `&start_date=${formattedStart}&end_date=${formattedEnd}` +
+      `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,windspeed_10m_max,relative_humidity_2m_mean&timezone=auto`
 
     const response = await fetch(url)
     const data = await response.json()
@@ -188,16 +179,7 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
 
     if (!daily || !Array.isArray(daily.time) || daily.time.length === 0) {
       console.warn('No daily forecast returned from weather API')
-      return {
-        score: 0,
-        breakdown: {
-          temperatureComfort: 0,
-          precipitationComfort: 0,
-          humidityComfort: 0,
-          windComfort: 0,
-          weatherCodeQuality: 0,
-        },
-      }
+      return { score: null, breakdown: null }
     }
 
     const days = daily.time.map((_, index) => {
@@ -281,8 +263,8 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
         } else if (day.weatherCode === 2 || day.weatherCode === 3) {
           weatherCodeQuality = 15
         } else if ((day.weatherCode >= 45 && day.weatherCode <= 48) ||
-                   (day.weatherCode >= 51 && day.weatherCode <= 67) ||
-                   (day.weatherCode >= 80 && day.weatherCode <= 82)) {
+          (day.weatherCode >= 51 && day.weatherCode <= 67) ||
+          (day.weatherCode >= 80 && day.weatherCode <= 82)) {
           weatherCodeQuality = 5
         }
         score += weatherCodeQuality
@@ -298,16 +280,7 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
     }
 
     if (validDays === 0) {
-      return {
-        score: 0,
-        breakdown: {
-          temperatureComfort: 0,
-          precipitationComfort: 0,
-          humidityComfort: 0,
-          windComfort: 0,
-          weatherCodeQuality: 0,
-        },
-      }
+      return { score: null, breakdown: null }
     }
 
     const avgTempComfort = Math.round(totalTempComfort / validDays)
@@ -329,16 +302,7 @@ async function getWeatherScore(latitude, longitude, startDate, endDate) {
     }
   } catch (error) {
     console.error('Error calculating weather score:', error)
-    return {
-      score: 0,
-      breakdown: {
-        temperatureComfort: 0,
-        precipitationComfort: 0,
-        humidityComfort: 0,
-        windComfort: 0,
-        weatherCodeQuality: 0,
-      },
-    }
+    return { score: null, breakdown: null }
   }
 }
 
@@ -525,6 +489,8 @@ app.post('/api/estimates/save', requireAuth, async (req, res) => {
     const savedEstimate = await TripEstimate.create({
       userId: req.session.user.id,
       ...estimatePayload,
+      from: originCity.name,
+      to: destinationCity.name,
     })
 
     const { originCityId, destinationCityId, isPartialResult, ...publicPayload } = estimatePayload
@@ -541,6 +507,202 @@ app.post('/api/estimates/save', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Save estimate error:', error)
     return res.status(error.status || 500).json({ error: error.message || 'Unable to save trip estimate.' })
+  }
+})
+
+app.get('/api/trips', requireAuth, async (req, res) => {
+  try {
+    const trips = await TripEstimate.find({ userId: req.session.user.id })
+      .populate('originCityId', 'name')
+      .populate('destinationCityId', 'name')
+      .sort({ createdAt: -1 })
+
+    res.json(trips)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to fetch trips' })
+  }
+})
+
+app.get('/api/trips/:tripId', requireAuth, async (req, res) => {
+  try {
+    const trip = await TripEstimate.findOne({
+      _id: req.params.tripId,
+      userId: req.session.user.id
+    })
+      .populate('originCityId', 'name')
+      .populate('destinationCityId', 'name')
+
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' })
+    }
+
+    res.json(trip)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to fetch trip' })
+  }
+})
+
+app.delete('/api/trips/:tripId', requireAuth, async (req, res) => {
+  try {
+    const deleted = await TripEstimate.findOneAndDelete({
+      _id: req.params.tripId,
+      userId: req.session.user.id,
+    })
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Trip not found' })
+    }
+
+    res.json({ message: 'Trip deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete trip' })
+  }
+})
+
+app.post('/api/trips', requireAuth, async (req, res) => {
+  try {
+    const trip = await TripEstimate.create({
+      userId: req.session.user.id,
+      ...req.body,
+    })
+
+    res.status(201).json(trip)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to save trip' })
+  }
+})
+
+
+// ── Admin Routes ─────────────────────────────────────────────────────────
+
+// stats
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const totalTrips = await TripEstimate.countDocuments()
+    const activeCities = await City.countDocuments({ status: 'active' })
+    const disabledCities = await City.countDocuments({ status: 'disabled' })
+    const totalUsers = await User.countDocuments({ role: 'client' })
+
+    res.json({ totalTrips, activeCities, disabledCities, totalUsers })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch stats' })
+  }
+})
+
+// public: list of active city names for the search form
+app.get('/api/cities', async (req, res) => {
+  try {
+    const cities = await City.find({ status: 'active' }, 'name country').sort({ name: 1 })
+    res.json(cities)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch cities' })
+  }
+})
+
+
+// get all cities
+app.get('/api/admin/cities', requireAdmin, async (req, res) => {
+  try {
+    const cities = await City.find()
+    res.json(cities)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch cities' })
+  }
+})
+
+
+// add a city
+app.post('/api/admin/cities', requireAdmin, async (req, res) => {
+  try {
+    const newCity = await City.create(req.body)
+    res.status(201).json(newCity)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to create city' })
+  }
+})
+
+
+// delete a city
+app.delete('/api/admin/cities/:cityId', requireAdmin, async (req, res) => {
+  try {
+    const deleted = await City.findByIdAndDelete(req.params.cityId)
+    if (!deleted) return res.status(404).json({ error: 'City not found' })
+    res.json({ message: 'City deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete city' })
+  }
+})
+
+// edit a city
+app.put('/api/admin/cities/:cityId', requireAdmin, async (req, res) => {
+  try {
+    const { cityId } = req.params
+
+    const updated = await City.findByIdAndUpdate(
+      cityId,
+      req.body,
+      { new: true }
+    )
+
+    if (!updated) {
+      return res.status(404).json({ error: 'City not found' })
+    }
+
+    res.json(updated)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update city' })
+  }
+})
+
+
+// get lodging options for a city
+app.get('/api/admin/cities/:cityId/lodging', requireAdmin, async (req, res) => {
+  try {
+    const options = await LodgingOption.find({ cityId: req.params.cityId })
+    const result = { budget: '', standard: '', luxury: '' }
+    for (const opt of options) {
+      result[opt.accommodationType] = opt.pricePerNight
+    }
+    res.json(result)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch lodging options' })
+  }
+})
+
+// upsert all 3 lodging options for a city
+app.put('/api/admin/cities/:cityId/lodging', requireAdmin, async (req, res) => {
+  try {
+    const { cityId } = req.params
+    const { budget, standard, luxury } = req.body
+
+    const types = { budget, standard, luxury }
+    const results = {}
+
+    for (const [type, price] of Object.entries(types)) {
+      if (price === '' || price === null || price === undefined) continue
+      const updated = await LodgingOption.findOneAndUpdate(
+        { cityId, accommodationType: type },
+        { pricePerNight: Number(price) },
+        { upsert: true, new: true }
+      )
+      results[type] = updated.pricePerNight
+    }
+
+    res.json(results)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to save lodging options' })
   }
 })
 
