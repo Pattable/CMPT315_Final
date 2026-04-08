@@ -89,7 +89,15 @@ const tripEstimateSchema = new Schema(
     },
     isPartialResult: {
       type: Boolean,
-      default: false,      // true when flight API failed
+      default: false,
+    },
+    from: {
+      type: String,
+      default: '',
+    },
+    to: {
+      type: String,
+      default: '',
     },
     breakdown: {
       type: costBreakdownSchema,

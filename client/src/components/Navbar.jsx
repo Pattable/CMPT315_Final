@@ -4,12 +4,21 @@ import { Link } from 'react-router-dom'
 function Navbar() {
   const { user, logout } = useAuth()
 
+  const displayName = user?.email ? user.email.split('@')[0] : null
+
   return (
     <nav className="navbar">
       <div className="navbar-inner container">
-        <Link to="/" className="navbar-logo">
-          Smart Trip Budget Estimator
+        <Link to={user?.role === 'admin' ? '/admin' : '/'} className="navbar-logo">
+          ✈︎ Smart Trip Budget Estimator
         </Link>
+        <div className="navbar-center">
+          {user && (
+            <span className="navbar-user">
+              {displayName}{user.role === 'admin' ? ' (Admin)' : ''}
+            </span>
+          )}
+        </div>
 
         <div className="navbar-links">
           {!user && (

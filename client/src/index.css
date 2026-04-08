@@ -2,12 +2,15 @@
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
   --color-accent: #10b981;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-border: #e2e8f0;
   --color-text: #1e293b;
   --color-text-muted: #64748b;
 
+  --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
@@ -16,7 +19,8 @@
   --font-sans: system-ui, -apple-system, sans-serif;
   --radius-md: 8px;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --max-width: 3000px;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --max-width: 1100px;
   --navbar-height: 64px;
 }
 
@@ -61,6 +65,16 @@ a:hover {
   padding: var(--space-xl) 0;
 }
 
+.loading-msg {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
 /* ---- Buttons ---- */
 
 .btn {
@@ -71,7 +85,8 @@ a:hover {
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
 }
 
 .btn-primary {
@@ -81,6 +96,8 @@ a:hover {
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
+  text-decoration: none;
+  color: white;
 }
 
 .btn-outline {
@@ -92,6 +109,21 @@ a:hover {
 .btn-outline:hover {
   background-color: var(--color-primary);
   color: white;
+  text-decoration: none;
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.btn-sm {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.85rem;
 }
 
 /* ---- Card ---- */
@@ -121,6 +153,13 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 
 .navbar-logo {
@@ -137,7 +176,7 @@ a:hover {
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .navbar-links a {
@@ -148,6 +187,16 @@ a:hover {
 .navbar-links a:hover {
   color: var(--color-primary);
   text-decoration: none;
+}
+
+.navbar-user {
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  background: #eff6ff;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
 }
 
 /* ---- Footer ---- */
@@ -175,34 +224,403 @@ a:hover {
   font-size: 0.875rem;
 }
 
+/* ---- Available Cities Dropdown ---- */
+
+.cities-dropdown {
+  max-width: 600px;
+  margin: 0 auto var(--space-md);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  background: #eff6ff;
+  overflow: hidden;
+}
+
+.cities-dropdown summary {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.cities-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.cities-dropdown summary::before {
+  content: '▶';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.cities-dropdown[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.cities-dropdown-list {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #bfdbfe;
+  margin: 0;
+  padding: var(--space-xs) 0;
+}
+
+.cities-dropdown-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.cities-dropdown-list li:hover {
+  background: #dbeafe;
+}
+
+.cities-dropdown-list li span {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
 /* ---- Search Form ---- */
 
 .search-form {
-  text-align: center;
-  gap: 5px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 fieldset {
-  text-align: center;
+  border: none;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.6rem 1rem;
+  align-items: center;
 }
 
-label {
+fieldset legend {
+  grid-column: 1 / -1;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--color-text);
+}
+
+fieldset label {
   text-align: right;
-  grid-column: span 2;
+  font-weight: 500;
+  color: var(--color-text);
+  padding-right: var(--space-sm);
 }
 
-input, select {
-  grid-column: span 2/5;
+fieldset input,
+fieldset select {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: white;
+  color: var(--color-text);
+}
+
+fieldset input:focus,
+fieldset select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .form-buttons {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: center;
-  gap: 5px;
-  grid-column: span 3/5;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.form-buttons button {
+  padding: var(--space-sm) var(--space-xl);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.form-buttons button[type="submit"] {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.form-buttons button[type="submit"]:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.form-buttons button:not([type="submit"]):hover {
+  background-color: var(--color-bg);
+}
+
+.error {
+  grid-column: 2;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: -0.25rem;
+}
+
+/* ---- Admin: shared ---- */
+
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.admin-page-header h1 {
+  margin: 0;
+}
+
+/* ---- Admin: Dashboard ---- */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.stats-grid .card h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.stats-grid .card p {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-table td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Admin: Cities ---- */
+
+.admin-cities-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.admin-city-list h2,
+.admin-city-form h2 {
+  margin-bottom: var(--space-md);
+  font-size: 1.1rem;
+}
+
+.city-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.city-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.city-list-item:last-child {
+  border-bottom: none;
+}
+
+.city-list-item.selected .city-list-name {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.city-list-name {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: left;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  padding: var(--space-xs) 0;
+}
+
+.city-list-name:hover {
+  color: var(--color-primary);
+}
+
+.city-status {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.city-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.city-status.disabled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ---- Admin: City Form ---- */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: white;
+  color: var(--color-text);
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-md);
+}
+
+.form-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.form-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.form-checkbox input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--color-primary);
+}
+
+.form-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+  margin-bottom: var(--space-sm);
+  margin-top: var(--space-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.lodging-status-row {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.lodging-badge {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 500;
+  text-transform: capitalize;
+  letter-spacing: 0;
+}
+
+.lodging-badge.set {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.lodging-badge.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
 /* ---- Trip Card ---- */
@@ -249,6 +667,80 @@ input, select {
 .trip-card-score {
   font-size: 0.9rem;
   color: var(--color-text-muted);
+}
+
+.weather-unavailable {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ---- Trip Detail ---- */
+
+.detail-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.detail-title {
+  margin-bottom: var(--space-lg);
+  font-size: 1.6rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.detail-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row span {
+  color: var(--color-text-muted);
+}
+
+.detail-total {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.detail-total strong {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.detail-note {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
 }
 
 /* ---- Results Page ---- */
