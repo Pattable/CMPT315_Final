@@ -23,7 +23,7 @@ SESSION_SECRET=any_random_string
 CURRENCY_API_KEY=your_exchangerate_api_key
 ```
 
-Seed the database:
+Seed the database (adds cities and lodging data):
 
 ```bash
 node seed.js
@@ -53,23 +53,36 @@ If the frontend runs on a different port, update the `cors` origin in `server/se
 
 ---
 
-## Test Accounts
+## User Accounts
 
-| Email | Password | Role |
-|-------|----------|------|
-| admin@test.com | password123 | Admin |
-| client@test.com | password123 | Client |
+- Users can register through the application using the Register page.
+- New accounts are created with the **client** role by default.
+
+### Admin Access
+
+- Admin accounts are not created automatically.
+- To make a user an admin:
+  1. Go to your MongoDB database (MongoDB Atlas).
+  2. Open the `users` collection.
+  3. Find the user document.
+  4. Change the `role` field from `"client"` to `"admin"`.
+
+Admins have access to:
+- Admin dashboard
+- City management (add, edit, delete cities and lodging options)
 
 ---
 
 ## External APIs
 
-- Open-Meteo (weather data, no API key required)
-- ExchangeRate API (currency conversion, requires API key)
+- Open-Meteo — weather data (no API key required)
+- ExchangeRate API — currency conversion (requires API key)
 
 ---
 
 ## Notes
 
 - Make sure to create a `.env` file before running the backend.
+- Do NOT include `.env` in your submission.
 - Run `npm install` in both `client/` and `server/` before starting.
+- The seed file only adds cities and lodging data (no users are pre-created).
