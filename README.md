@@ -72,5 +72,4 @@ If the frontend runs on a different port, update the `cors` origin in `server/se
 ## Notes
 
 - Make sure to create a `.env` file before running the backend.
-- Do NOT include `.env` in submission.
 - Run `npm install` in both `client/` and `server/` before starting.
