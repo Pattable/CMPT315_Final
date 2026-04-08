@@ -83,6 +83,4 @@ Admins have access to:
 ## Notes
 
 - Make sure to create a `.env` file before running the backend.
-- Do NOT include `.env` in your submission.
 - Run `npm install` in both `client/` and `server/` before starting.
-- The seed file only adds cities and lodging data (no users are pre-created).
